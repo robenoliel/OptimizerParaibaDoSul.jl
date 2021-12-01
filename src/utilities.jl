@@ -604,8 +604,6 @@ function operates_sta_cecilia_plant(hidroplants::Dict,incremental_natural_flows:
     """
 
     function_flow_value = flow_function(hidroplants,month,input_folder)
-    updates_inflow("sta_cecilia", hidroplants, incremental_natural_flows, step)
-    inflow =  hidroplants["sta_cecilia"].inflow
     turbining_ratio = 120/190
 
     if inflow > m3_per_sec_to_hm3_per_month(function_flow_value,month)
@@ -708,9 +706,11 @@ end
 function flow_function(hidroplants::Dict,month::Int64,input_folder::String)
     x = paraibuna_do_sul_equivalent_reservoir_status(hidroplants)
     p = Polynomial(readdlm(joinpath(input_folder,"defluence_poly.csv"), '\t', Float64)[month,:])
-    min = p(0.0)
+    m = vec(readdlm(joinpath(input_folder,"defluence_poly_meta.csv"), '\t', Float64))
+    min = m[1]
     d = derivative(p)
     y = (p(x) > min) && (d(x) > 0) ? p(x) : min
+    y = y > 250 ? 250.0 : p(x)
     return y
 end
 
