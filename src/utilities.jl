@@ -574,7 +574,7 @@ function ask_previous_plants(name::Union{String15,String},hidroplants::Dict,valu
             return extra_acquired
         end
     end
-    if name == "sta_cecilia" && (reservoir_status("funil",hidroplants) > 0 || reservoir_status("sta_branca",hidroplants) > 0 || reservoir_status("jaguari",hidroplants) > 0) && hidroplants["paraibuna"].reservoir > hidroplants["paraibuna"].min_reservoir - 425
+    if name == "sta_cecilia" && (reservoir_status("funil",hidroplants) > 0 || reservoir_status("sta_branca",hidroplants) > 0 || reservoir_status("jaguari",hidroplants) > 0) && hidroplants["paraibuna"].reservoir < hidroplants["paraibuna"].min_reservoir - 420
         last_resource = ask_previous_plants("sta_cecilia",hidroplants,start_value - extra_acquired,month,complete_depletion = true)
     end
     return extra_acquired
@@ -615,9 +615,12 @@ function operates_sta_cecilia_plant(hidroplants::Dict,incremental_natural_flows:
             hidroplants["sta_cecilia"].spilling = hm3_per_month_to_m3_per_sec(inflow,month)*(1-turbining_ratio)
         end
     else
+        @show hm3_per_month_to_m3_per_sec(inflow,month)
+        @show hm3_per_month_to_m3_per_sec(inflow,month) + function_flow_value
         ask_previous_plants("sta_cecilia",hidroplants,m3_per_sec_to_hm3_per_month(function_flow_value,month) - inflow,month;stage = stage)
         updates_inflow("sta_cecilia", hidroplants, incremental_natural_flows, step)
         inflow =  hidroplants["sta_cecilia"].inflow
+        @show hm3_per_month_to_m3_per_sec(inflow,month)
         hidroplants["sta_cecilia"].turbining = hm3_per_month_to_m3_per_sec(inflow,month)*turbining_ratio
         hidroplants["sta_cecilia"].spilling = hm3_per_month_to_m3_per_sec(inflow,month)*(1-turbining_ratio)
     end
@@ -709,8 +712,7 @@ function flow_function(hidroplants::Dict,month::Int64,input_folder::String)
     m = vec(readdlm(joinpath(input_folder,"defluence_poly_meta.csv"), '\t', Float64))
     min = m[1]
     d = derivative(p)
-    y = (p(x) > min) && (d(x) > 0) ? p(x) : min
-    y = y > 250 ? 250.0 : p(x)
+    y = p(x) > 250 ? 250.0 : (p(x) > min) && (d(x) > 0) ? p(x) : min
     return y
 end
 
@@ -794,9 +796,9 @@ function writes_output_files(hidroplants::Dict,case_name::String,incremental_nat
         df_incremental_flows[!,name] = incremental_natural_flows[name]
         df_generation[!,name] = plant.generation_timeline
         df_evaporation[!,name] = plant.evaporation_timeline
-        df_reservoir_violations[!,name] = [v > plant.min_reservoir ? v - plant.min_reservoir : 0.0 for v in plant.reservoir_timeline]
-        df_turbining_violations[!,name] = [v > plant.min_turbining ? v - plant.min_turbining : 0.0 for v in plant.turbine_timeline]
-        df_spillage_violations[!,name] = [v > plant.min_spillage ? v - plant.min_spillage : 0.0 for v in plant.spill_timeline]
+        df_reservoir_violations[!,name] = [v < plant.min_reservoir ? plant.min_reservoir - v : 0.0 for v in plant.reservoir_timeline]
+        df_turbining_violations[!,name] = [v < plant.min_turbining ? plant.min_turbining - v : 0.0 for v in plant.turbine_timeline]
+        df_spillage_violations[!,name] = [v < plant.min_spillage ? plant.min_spillage - v : 0.0 for v in plant.spill_timeline]
 
     end
 
@@ -816,9 +818,9 @@ function writes_output_files(hidroplants::Dict,case_name::String,incremental_nat
     CSV.write(joinpath(case_name,"results",name*"_incremental_flow_m3_per_sec.csv"),df_incremental_flows)
     CSV.write(joinpath(case_name,"results",name*"_generation_MW.csv"),df_generation)
     CSV.write(joinpath(case_name,"results",name*"_evaporation_m3_per_sec.csv"),df_evaporation)
-    CSV.write(joinpath(case_name,"results","violations",name*"_reservoir_hm3.csv"),df_reservoir_violations)
-    CSV.write(joinpath(case_name,"results","violations",name*"_turbining_m3_per_sec.csv"),df_turbining_violations)
-    CSV.write(joinpath(case_name,"results","violations",name*"_spillage_m3_per_sec.csv"),df_spillage_violations)
+    CSV.write(joinpath(case_name,"results","violations",name*"_reservoir_violations_hm3.csv"),df_reservoir_violations)
+    CSV.write(joinpath(case_name,"results","violations",name*"_turbining_violations_m3_per_sec.csv"),df_turbining_violations)
+    CSV.write(joinpath(case_name,"results","violations",name*"_spillage_violations_m3_per_sec.csv"),df_spillage_violations)
 end
 
 "File with utility methods for simulating Paraiba do Sul"
