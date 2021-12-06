@@ -3,7 +3,7 @@ using OptimizerParaibaDoSul
 
 const OPS = OptimizerParaibaDoSul
 
-case_name = "example"
+case_name = "base_results"
 input_folder = "../$(case_name)"
 
 @testset "SimulatorParaibaDoSul" begin
@@ -13,7 +13,7 @@ input_folder = "../$(case_name)"
         for folder in ["evaporation_data","flow_data","generation_data","irrigation_data"]
             @test isdir(joinpath(input_folder,folder))
         end
-        for file in ["hidroplants_params.csv","topology.csv"]
+        for file in ["hidroplants_params.csv","topology.csv","cfur.csv"]
             @test isfile(joinpath(input_folder,file))
         end
     end
