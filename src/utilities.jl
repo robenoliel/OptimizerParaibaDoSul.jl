@@ -615,12 +615,9 @@ function operates_sta_cecilia_plant(hidroplants::Dict,incremental_natural_flows:
             hidroplants["sta_cecilia"].spilling = hm3_per_month_to_m3_per_sec(inflow,month)*(1-turbining_ratio)
         end
     else
-        @show hm3_per_month_to_m3_per_sec(inflow,month)
-        @show hm3_per_month_to_m3_per_sec(inflow,month) + function_flow_value
         ask_previous_plants("sta_cecilia",hidroplants,m3_per_sec_to_hm3_per_month(function_flow_value,month) - inflow,month;stage = stage)
         updates_inflow("sta_cecilia", hidroplants, incremental_natural_flows, step)
         inflow =  hidroplants["sta_cecilia"].inflow
-        @show hm3_per_month_to_m3_per_sec(inflow,month)
         hidroplants["sta_cecilia"].turbining = hm3_per_month_to_m3_per_sec(inflow,month)*turbining_ratio
         hidroplants["sta_cecilia"].spilling = hm3_per_month_to_m3_per_sec(inflow,month)*(1-turbining_ratio)
     end
@@ -712,7 +709,7 @@ function flow_function(hidroplants::Dict,month::Int64,input_folder::String)
     m = vec(readdlm(joinpath(input_folder,"defluence_poly_meta.csv"), '\t', Float64))
     min = m[1]
     d = derivative(p)
-    y = p(x) > 250 ? 250.0 : (p(x) > min) && (d(x) > 0) ? p(x) : min
+    y = p(x) > 250  && (d(x) > 0) ? 250.0 : (p(x) > min) && (d(x) > 0) ? p(x) : min
     return y
 end
 
