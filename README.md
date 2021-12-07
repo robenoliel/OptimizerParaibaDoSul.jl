@@ -120,3 +120,6 @@ julia --project run.jl "function_trials"
 
 ## Resultados
 
+Uma vez concluída a simulação, pode-se observar que novas pastas terão sido criadas no diretório `function_trials`. Cada uma dessas pastas corresponde a um caso que foi criado e simulado de acordo com uma combinação de parâmetros de regra alternativa. Caso elas já existissem, terão sido atualizadas. Cada uma das pastas é nomeada pelo modelo do prefixo `trial` seguido dos valores de A, B e C, respectivamente, utilizados naquele caso. Os arquivos da pasta se assemelham bastante aos do caso base ANA, tanto os dados de entrada, que serão uma cópia dos arquivos de `base_results`, quanto os resultados. A única diferença consiste em dois arquivos, `defluence_poly.csv` e `defluence_poly_meta.csv`, que são gerados automaticamente e não se recomenda que sejam editados.
+
+Os resultados que interessam da simulação estarão, dentro de cada pasta de `trial`, no interior de `results`, seguindo o mesmo padrão de arquivos que o do simulador original.
